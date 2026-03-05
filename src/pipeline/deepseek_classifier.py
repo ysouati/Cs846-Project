@@ -4,6 +4,9 @@ import os
 import math
 from collections import defaultdict
 from openai import AsyncOpenAI
+from dotenv import load_dotenv
+
+load_dotenv()
 
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 client = AsyncOpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
