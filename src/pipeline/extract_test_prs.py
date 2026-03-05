@@ -48,6 +48,7 @@ def process_pull_requests(loader: HFDataLoader, limit: int = 0) -> List[Dict[str
     
     test_prs = set()
     pr_commit_map = defaultdict(list)
+    test_pr_meta = defaultdict(set)
     
     for commit in ds_commit_details:
         pr_id = str(commit.get('pr_id'))
@@ -69,6 +70,7 @@ def process_pull_requests(loader: HFDataLoader, limit: int = 0) -> List[Dict[str
         if status in ('added', 'modified'):
             if TestFileClassifier.is_test_file(filename):
                 test_prs.add(pr_id)
+                test_pr_meta[pr_id].add(filename)
                 
     test_pr_list = list(test_prs)
     print(f"   Identified {len(test_pr_list)} valid Test PRs.")
@@ -128,7 +130,8 @@ def process_pull_requests(loader: HFDataLoader, limit: int = 0) -> List[Dict[str
                     "merged_at": pr_data.get('merged_at'),
                     "created_at": pr_data.get('created_at'),
                     "total_commits": len(commits_timeline),
-                    "commits": commits_timeline
+                    "commits": commits_timeline,
+                    "added_test_paths": list(test_pr_meta[pr_id])
                 })
         except Exception as e:
             print(f"   Error fetching {repo_full_name}: {e}")
@@ -143,7 +146,8 @@ def process_pull_requests(loader: HFDataLoader, limit: int = 0) -> List[Dict[str
                     "merged_at": pr_data.get('merged_at'),
                     "created_at": pr_data.get('created_at'),
                     "total_commits": 0,
-                    "commits": []
+                    "commits": [],
+                    "added_test_paths": list(test_pr_meta[pr_id])
                 })
 
     return results

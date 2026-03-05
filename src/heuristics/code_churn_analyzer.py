@@ -70,10 +70,10 @@ class CodeChurnAnalyzer:
                 "integration": 0,
                 "e2e": 0
             },
-            "type_proofs": {
-                "unit": None,
-                "integration": None,
-                "e2e": None
+            "type_paths": {
+                "unit": set(),
+                "integration": set(),
+                "e2e": set()
             }
         }
 
@@ -100,8 +100,7 @@ class CodeChurnAnalyzer:
                 # Further refine the type
                 test_type = cls.classify_test_type(filepath)
                 metrics["type_counts"][test_type] += 1
-                if not metrics["type_proofs"][test_type]:
-                    metrics["type_proofs"][test_type] = filepath
+                metrics["type_paths"][test_type].add(filepath)
             else:
                 metrics["prod_additions"] += additions
                 metrics["prod_deletions"] += deletions
@@ -113,4 +112,5 @@ class CodeChurnAnalyzer:
                 max_count = count
                 metrics["dominant_test_type"] = t_type
 
+        metrics["type_paths"] = {k: list(v) for k, v in metrics["type_paths"].items()}
         return metrics

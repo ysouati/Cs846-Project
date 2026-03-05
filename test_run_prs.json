@@ -1,0 +1,223 @@
+[
+  {
+    "pr_id": 3070999255,
+    "pr_number": 729,
+    "repo_full_name": "OpenHFT/Chronicle-Core",
+    "agent_type": "OpenAI_Codex",
+    "merged_at": null,
+    "created_at": "2025-05-17T19:00:18Z",
+    "total_commits": 1,
+    "commits": [
+      {
+        "sha": "09dcaa4207cd120e9933fd998b1331e09c731ce8",
+        "authored_date": "2025-05-17T19:00:17Z",
+        "committed_date": "2025-05-17T19:00:17Z"
+      }
+    ],
+    "added_test_paths": [
+      "src/test/java/net/openhft/chronicle/core/pool/StringBuilderPoolTest.java"
+    ]
+  },
+  {
+    "pr_id": 3217602544,
+    "pr_number": 48,
+    "repo_full_name": "briangu/klongpy",
+    "agent_type": "OpenAI_Codex",
+    "merged_at": "2025-07-10T01:47:47Z",
+    "created_at": "2025-07-10T01:43:20Z",
+    "total_commits": 1,
+    "commits": [
+      {
+        "sha": "7aa34fd49b8c0e59a186b02095daadb97b46f2e5",
+        "authored_date": "2025-07-10T01:43:19Z",
+        "committed_date": "2025-07-10T01:43:19Z"
+      }
+    ],
+    "added_test_paths": [
+      "tests/test_autograd.py"
+    ]
+  },
+  {
+    "pr_id": 3186905290,
+    "pr_number": 4027,
+    "repo_full_name": "mochilang/mochi",
+    "agent_type": "OpenAI_Codex",
+    "merged_at": "2025-06-30T02:24:55Z",
+    "created_at": "2025-06-30T02:23:43Z",
+    "total_commits": 1,
+    "commits": [
+      {
+        "sha": "51b3173d8dfb9d55a8ff68c8825791534a609ff6",
+        "authored_date": "2025-06-30T02:23:41Z",
+        "committed_date": "2025-06-30T02:23:41Z"
+      }
+    ],
+    "added_test_paths": [
+      "tests/dataset/tpc-ds/q83.mochi",
+      "tests/dataset/tpc-ds/q87.mochi",
+      "tests/dataset/tpc-ds/q80.mochi",
+      "tests/dataset/tpc-ds/q86.mochi",
+      "tests/dataset/tpc-ds/q88.mochi",
+      "tests/dataset/tpc-ds/q81.mochi",
+      "tests/dataset/tpc-ds/q82.mochi",
+      "tests/dataset/tpc-ds/q89.mochi",
+      "tests/dataset/tpc-ds/q84.mochi",
+      "tests/dataset/tpc-ds/q85.mochi"
+    ]
+  },
+  {
+    "pr_id": 3215539050,
+    "pr_number": 6753,
+    "repo_full_name": "mochilang/mochi",
+    "agent_type": "OpenAI_Codex",
+    "merged_at": "2025-07-09T11:09:51Z",
+    "created_at": "2025-07-09T11:08:48Z",
+    "total_commits": 1,
+    "commits": [
+      {
+        "sha": "56685b08bdc430921192fffe4a4a7e39bc73e054",
+        "authored_date": "2025-07-09T11:08:46Z",
+        "committed_date": "2025-07-09T11:08:46Z"
+      }
+    ],
+    "added_test_paths": [
+      "tests/machine/x/scala/typed_var.scala",
+      "tests/machine/x/scala/typed_let.scala",
+      "tests/machine/x/scala/typed_var.out",
+      "tests/machine/x/scala/typed_let.out"
+    ]
+  },
+  {
+    "pr_id": 3147217449,
+    "pr_number": 732,
+    "repo_full_name": "mochilang/mochi",
+    "agent_type": "OpenAI_Codex",
+    "merged_at": "2025-06-15T07:48:39Z",
+    "created_at": "2025-06-15T07:48:27Z",
+    "total_commits": 1,
+    "commits": [
+      {
+        "sha": "cb02a8d13a10b557e7e73f5f863c690bfb397a3e",
+        "authored_date": "2025-06-15T07:48:26Z",
+        "committed_date": "2025-06-15T07:48:26Z"
+      }
+    ],
+    "added_test_paths": [
+      "tests/parser/valid/type_struct_equals.mochi",
+      "tests/parser/valid/type_struct_equals.golden"
+    ]
+  },
+  {
+    "pr_id": 3267752275,
+    "pr_number": 13988,
+    "repo_full_name": "mochilang/mochi",
+    "agent_type": "OpenAI_Codex",
+    "merged_at": "2025-07-28T02:08:44Z",
+    "created_at": "2025-07-28T02:08:31Z",
+    "total_commits": 1,
+    "commits": [
+      {
+        "sha": "b7b5d705ba3ebc6ddfc174413d1ecb4f7b939bee",
+        "authored_date": "2025-07-28T02:08:29Z",
+        "committed_date": "2025-07-28T02:08:29Z"
+      }
+    ],
+    "added_test_paths": [
+      "tests/rosetta/x/Mochi/fractal-tree.out",
+      "tests/rosetta/x/Mochi/fractal-tree.mochi"
+    ]
+  },
+  {
+    "pr_id": 3128997979,
+    "pr_number": 226,
+    "repo_full_name": "mochilang/mochi",
+    "agent_type": "OpenAI_Codex",
+    "merged_at": "2025-06-09T03:07:14Z",
+    "created_at": "2025-06-09T03:06:31Z",
+    "total_commits": 1,
+    "commits": [
+      {
+        "sha": "d8d07e121ccd179fa916d3f3f4701d74e33b934e",
+        "authored_date": "2025-06-09T03:06:29Z",
+        "committed_date": "2025-06-09T03:06:29Z"
+      }
+    ],
+    "added_test_paths": [
+      "tests/compiler/valid/fold_pure_let.ts.out",
+      "tests/compiler/valid/fun_call.ts.out",
+      "tests/compiler/valid/two_sum.ts.out",
+      "tests/compiler/valid/fun_expr_in_let.ts.out",
+      "tests/compiler/valid/fold_pure_let.py.out",
+      "tests/compiler/valid/fold_pure_let.out",
+      "tests/compiler/valid/closure.ts.out"
+    ]
+  },
+  {
+    "pr_id": 3156270920,
+    "pr_number": 1717,
+    "repo_full_name": "mochilang/mochi",
+    "agent_type": "OpenAI_Codex",
+    "merged_at": null,
+    "created_at": "2025-06-18T10:07:33Z",
+    "total_commits": 1,
+    "commits": [
+      {
+        "sha": "be6ea6799f43af22a38cf0e1624c7cc7632e01d4",
+        "authored_date": "2025-06-18T10:07:31Z",
+        "committed_date": "2025-06-18T10:07:31Z"
+      }
+    ],
+    "added_test_paths": [
+      "tests/compiler/valid/for_loop.scm.out",
+      "tests/compiler/valid/two_sum.scm.out",
+      "tests/compiler/valid/let_and_print.scm.out",
+      "tests/compiler/valid/print_hello.scm.out",
+      "tests/compiler/valid/if_else.scm.out",
+      "tests/compiler/valid/var_assignment.scm.out",
+      "tests/compiler/valid/grouped_expr.scm.out",
+      "tests/compiler/valid/fun_call.scm.out",
+      "tests/compiler/valid/len_builtin.scm.out",
+      "tests/compiler/valid/list_index.scm.out",
+      "tests/compiler/valid/while_loop.scm.out"
+    ]
+  },
+  {
+    "pr_id": 3095144464,
+    "pr_number": 115,
+    "repo_full_name": "DannyMac180/meta-agent",
+    "agent_type": "OpenAI_Codex",
+    "merged_at": "2025-05-27T20:34:56Z",
+    "created_at": "2025-05-27T20:34:43Z",
+    "total_commits": 1,
+    "commits": [
+      {
+        "sha": "a12b119b38aa4b8f360e46d8700580e84292bd29",
+        "authored_date": "2025-05-27T20:34:42Z",
+        "committed_date": "2025-05-27T20:34:42Z"
+      }
+    ],
+    "added_test_paths": [
+      "tests/unit/test_telemetry_db.py",
+      "tests/test_cli.py"
+    ]
+  },
+  {
+    "pr_id": 3088697254,
+    "pr_number": 972,
+    "repo_full_name": "jcputney/scorm-again",
+    "agent_type": "OpenAI_Codex",
+    "merged_at": "2025-05-24T20:03:54Z",
+    "created_at": "2025-05-24T19:59:49Z",
+    "total_commits": 1,
+    "commits": [
+      {
+        "sha": "5593466a02a7279627560bc3115427b62299fbc4",
+        "authored_date": "2025-05-24T19:59:47Z",
+        "committed_date": "2025-05-24T19:59:47Z"
+      }
+    ],
+    "added_test_paths": [
+      "test/utils/utilities.spec.ts"
+    ]
+  }
+]

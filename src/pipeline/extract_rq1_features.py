@@ -178,7 +178,8 @@ def main():
                 
                 # Part 1: Agent Behaviors
                 "dominant_test_type": churn_metrics["dominant_test_type"],
-                "test_type_proof": churn_metrics.get("type_proofs", {}).get(churn_metrics["dominant_test_type"]),
+                "test_type_counts": churn_metrics["type_counts"],
+                "test_type_paths": churn_metrics["type_paths"],
                 "test_additions": churn_metrics["test_additions"],
                 "test_deletions": churn_metrics["test_deletions"],
                 "prod_additions": churn_metrics["prod_additions"],
