@@ -11,16 +11,13 @@ load_dotenv()
 DEEPSEEK_API_KEY = os.environ.get("DEEPSEEK_API_KEY")
 client = AsyncOpenAI(api_key=DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
 
-# Process in chunks to save tokens and conform to the model's context
 CHUNK_SIZE = 150
-# Simultaneous API requests to avoid rate limits
 CONCURRENCY_LIMIT = 5
 
 PROMPT_SYSTEM = """You are an expert software test classifier. I will provide you a JSON array of file paths. 
 Your task is to determine if each file path represents an actual software test file.
 If it is NOT a test file, classify it as "not_a_test".
-If it IS a test file, classify it deeply as exactly ONE of: "unit", "integration", "e2e", or "other".
-If you do not know the type or it does not fit into unit/integration/e2e, output "other".
+If it IS a test file, classify it deeply as exactly ONE of: "unit", "integration", or "e2e".
 CRITICAL RULES:
 - Output ONLY a valid JSON object. Do NOT wrap it in Markdown (```json).
 - The JSON object must consist of exact file paths as keys, and the classification string as values.
@@ -44,7 +41,6 @@ async def classify_chunk(paths_chunk, semaphore, chunk_idx, total_chunks, max_re
                 )
                 
                 response_content = response.choices[0].message.content
-                # Simple cleanup if the model still wraps in markdown
                 if response_content.startswith('```json'):
                     response_content = response_content[7:]
                 if response_content.endswith('```'):
@@ -57,19 +53,17 @@ async def classify_chunk(paths_chunk, semaphore, chunk_idx, total_chunks, max_re
                 await asyncio.sleep(2 ** attempt)
                 
         print(f"   [FAILED] Chunk {chunk_idx} failed after {max_retries} retries.")
-        # Return fallback heuristic preserving original paths as unknown safely if totally failed
         return {}
 
 async def main():
-    print("1) Loading initial RQ1 Metrics Dataset...")
+    print("1) Loading initial RQ3 Human regex dataset...")
     try:
-        with open("rq1_metrics_dataset.json", "r") as f:
+        with open("rq3_human_regex_prs.json", "r") as f:
             data = json.load(f)
     except FileNotFoundError:
-        print("Error: rq1_metrics_dataset.json not found.")
+        print("Error: rq3_human_regex_prs.json not found.")
         return
 
-    # Extract all unique paths
     unique_paths = set()
     for pr in data:
         for paths in pr.get("test_type_paths", {}).values():
@@ -78,18 +72,15 @@ async def main():
     paths_list = list(unique_paths)
     print(f"   Found {len(paths_list)} unique test paths to classify.")
     
-    # Check for existing cache
-    cache_file = "deepseek_cache.json"
+    cache_file = "deepseek_cache_rq3.json"
     cache = {}
     if os.path.exists(cache_file):
         with open(cache_file, "r") as f:
             cache = json.load(f)
         print(f"   Loaded {len(cache)} pre-classified paths from {cache_file}.")
         
-        # Filter out already classified paths that were marked as not_a_test
-        # We only want to re-run the ones that were marked as actual tests to identify "other" types
-        paths_list = [p for p in paths_list if p not in cache or cache[p] != "not_a_test"]
-        print(f"   {len(paths_list)} paths remaining to classify (skipping {len(cache) - len(paths_list)} not_a_test paths).")
+        paths_list = [p for p in paths_list if p not in cache]
+        print(f"   {len(paths_list)} paths remaining to classify.")
         
     if len(paths_list) > 0:
         chunks = [paths_list[i:i + CHUNK_SIZE] for i in range(0, len(paths_list), CHUNK_SIZE)]
@@ -104,7 +95,7 @@ async def main():
         for res in results:
             cache.update(res)
                 
-        print("3) Saving extracted cache to deepseek_cache.json...")
+        print("3) Saving extracted cache to deepseek_cache_rq3.json...")
         with open(cache_file, "w") as f:
             json.dump(cache, f, indent=2)
     else:
@@ -117,41 +108,33 @@ async def main():
         new_paths = {
             "unit": [],
             "integration": [],
-            "e2e": [],
-            "other": []
+            "e2e": []
         }
         
-        # Re-map all old paths
         for old_type, paths in pr.get("test_type_paths", {}).items():
             for p in paths:
                 deepseek_decision = cache.get(p, "unknown").lower()
                 
-                # Default to the heuristic categorization if DeepSeek failed to categorize it
                 if deepseek_decision == "unknown":
                     deepseek_decision = old_type
                     
                 if deepseek_decision in new_paths:
                     new_paths[deepseek_decision].append(p)
                 elif deepseek_decision == "not_a_test":
-                    pass # Discard
+                    pass 
                 else:
-                    # Anything unexpected defaults to other
-                    new_paths["other"].append(p)
+                    new_paths["unit"].append(p)
                     
-        # Calculate new counts
         new_counts = {
             "unit": len(new_paths["unit"]),
             "integration": len(new_paths["integration"]),
-            "e2e": len(new_paths["e2e"]),
-            "other": len(new_paths["other"])
+            "e2e": len(new_paths["e2e"])
         }
         
         total_valid = sum(new_counts.values())
         if total_valid == 0:
-            # PR has NO valid tests after DeepSeek validation, discard the PR entirely
             continue
             
-        # Determine new dominant type
         dominant = max(new_counts, key=new_counts.get)
         
         pr["test_type_paths"] = new_paths
@@ -162,8 +145,8 @@ async def main():
         
     print(f"   Final Valid PRs after filtering: {len(final_prs)} (Started with {len(data)})")
     
-    print("5) Saving to rq1_deepseek_filtered.json...")
-    with open("rq1_deepseek_filtered.json", "w") as f:
+    print("5) Saving to rq3_human_deepseek_filtered.json...")
+    with open("rq3_human_deepseek_filtered.json", "w") as f:
         json.dump(final_prs, f, indent=2)
         
     print("Success. Run complete.")

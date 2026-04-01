@@ -116,16 +116,16 @@ def main():
     
     md_content.append("\n### 4. DeepSeek Validation Pipeline\n")
     md_content.append("Heuristics alone are susceptible to false positives (e.g., `test_utils.py` being flagged as a unit test instead of a test helper). To guarantee the absolute purity of the testing metrics, we executed a secondary validation phase using an LLM.\n")
-    md_content.append("- We extracted all **7,686 unique test file paths** and batched them asynchronously through the **DeepSeek Chat API** (`deepseek-chat`).\n")
-    md_content.append("- DeepSeek was prompted to strictly re-classify each path as exactly one of: `unit`, `integration`, `e2e`, or `not_a_test`.\n")
+    md_content.append("- We extracted all **76,733 unique test file paths** originally caught by the heuristics and batched them asynchronously through the **DeepSeek Chat API** (`deepseek-chat`).\n")
+    md_content.append("- DeepSeek was prompted to strictly re-classify each path as exactly one of: `unit`, `integration`, `e2e`, `other`, or `not_a_test`.\n")
     md_content.append("- **Why DeepSeek?** We explicitly chose DeepSeek as the validation judge because none of the evaluated agents (Devin, Cursor, Copilot, Claude Code, OpenAI Codex) are powered by or inherently biased toward DeepSeek's specific base foundation models, ensuring a neutral, zero-contamination evaluation.\n")
-    md_content.append("- Any PR where all test paths were downgraded to `not_a_test` by DeepSeek was purged from the dataset. This distilled our pool to a high-fidelity cohort of **8,807 Verified Test PRs** upon which all following math is based.\n")
+    md_content.append(f"- Any PR where all test paths were downgraded to `not_a_test` by DeepSeek was purged from the dataset. This distilled our pool to a high-fidelity cohort of **{len(df)} Verified Test PRs** upon which all following math is based.\n")
     md_content.append("---\n")
     
     # 1. Type of Tests
     md_content.append("## 1. Type of Tests Distribution\n")
     plt.figure(figsize=(8, 6))
-    ax = sns.countplot(data=df, x='dominant_test_type', order=['unit', 'integration', 'e2e'], palette='Set2', hue='dominant_test_type', legend=False)
+    ax = sns.countplot(data=df, x='dominant_test_type', order=['unit', 'integration', 'e2e', 'other'], palette='Set2', hue='dominant_test_type', legend=False)
     plt.title("Overall Test Type Distribution")
     plt.ylabel("Number of PRs")
     plt.xlabel("Test Type")
@@ -136,13 +136,13 @@ def main():
     
     md_content.append("### Overall")
     type_counts = df['dominant_test_type'].value_counts()
-    for t in ['unit', 'integration', 'e2e']:
+    for t in ['unit', 'integration', 'e2e', 'other']:
         c = type_counts.get(t, 0)
         md_content.append(f"- **{t.upper()}**: {c} ({c/len(df)*100:.1f}%)")
     md_content.append("\n![Overall Test Types](figures/1_test_type_overall.png)\n")
 
     plt.figure(figsize=(10, 6))
-    ax = sns.countplot(data=df, x='agent_type', hue='dominant_test_type', hue_order=['unit', 'integration', 'e2e'], palette='Set2')
+    ax = sns.countplot(data=df, x='agent_type', hue='dominant_test_type', hue_order=['unit', 'integration', 'e2e', 'other'], palette='Set2')
     plt.title("Test Type Distribution Grouped by Agent")
     plt.ylabel("Number of PRs")
     plt.xlabel("Agent Type")
@@ -276,7 +276,27 @@ def main():
     md_content.append(f"- **Total Multi-Commit PRs**: {total_m}")
     md_content.append(f"- **Succeeded**: {succ_m} ({succ_m/total_m*100:.1f}%)")
     md_content.append(f"- **Failed**: {total_m - succ_m} ({(total_m - succ_m)/total_m*100:.1f}%)")
-    md_content.append(f"- **Independently Resolved CI Failures**: {ci_fixed_m} ({ci_fixed_m/total_m*100:.1f}% of all multi-commit PRs)")
+
+    # CI Failure Categories
+    if 'ci_had_failure' in df_multi.columns:
+        # Enforce logical consistency: if the agent fixed a CI failure, it MUST have had a failure,
+        # resolving API state drifts between pipeline execution dates.
+        df_multi.loc[df_multi['indep_fixed_ci'] == True, 'ci_had_failure'] = True
+
+        no_ci_failure = len(df_multi[df_multi['ci_had_failure'] == False])
+        indep_resolved = len(df_multi[df_multi['indep_fixed_ci'] == True])
+        
+        failed_not_indep = df_multi[(df_multi['ci_had_failure'] == True) & (df_multi['indep_fixed_ci'] == False)]
+        not_solved_human = len(failed_not_indep[failed_not_indep['success'] == 1])
+        not_solved_abandoned = len(failed_not_indep[failed_not_indep['success'] == 0])
+
+        md_content.append("\n### CI Failure Breakdown (Multi-Commit PRs)")
+        md_content.append(f"- **No CI Failure Occurred**: {no_ci_failure} ({no_ci_failure/total_m*100:.1f}%)")
+        md_content.append(f"- **Independently Solved (by Agent)**: {indep_resolved} ({indep_resolved/total_m*100:.1f}%)")
+        md_content.append(f"- **Not Solved, but Merged (with Human Help)**: {not_solved_human} ({not_solved_human/total_m*100:.1f}%)")
+        md_content.append(f"- **Not Solved and Abandoned**: {not_solved_abandoned} ({not_solved_abandoned/total_m*100:.1f}%)")
+    else:
+        md_content.append(f"- **Independently Resolved CI Failures**: {ci_fixed_m} ({ci_fixed_m/total_m*100:.1f}% of all multi-commit PRs)")
     
     df_multi_dummy = df_multi.copy()
     df_multi_dummy['All_Multi_Commit_PRs'] = 'Total Dataset'
@@ -402,10 +422,11 @@ def main():
     dist_unit = df[df['dominant_test_type'] == 'unit']['project_stars']
     dist_int = df[df['dominant_test_type'] == 'integration']['project_stars']
     dist_e2e = df[df['dominant_test_type'] == 'e2e']['project_stars']
+    dist_other = df[df['dominant_test_type'] == 'other']['project_stars']
     
     # Kruskal Wallis
-    if len(dist_unit) > 0 and len(dist_int) > 0 and len(dist_e2e) > 0:
-        h_stat, p_kw = st.kruskal(dist_unit, dist_int, dist_e2e)
+    if len(dist_unit) > 0 and len(dist_int) > 0 and len(dist_e2e) > 0 and len(dist_other) > 0:
+        h_stat, p_kw = st.kruskal(dist_unit, dist_int, dist_e2e, dist_other)
         md_content.append(f"- **H-Statistic**: {h_stat:.4f}\n- **p-value**: {p_kw:.4g}\n")
         
         if p_kw < 0.05:
@@ -413,21 +434,22 @@ def main():
             try:
                 p_values = sp.posthoc_dunn(df, val_col='project_stars', group_col='dominant_test_type', p_adjust='bonferroni')
                 md_content.append("#### Dunn's Test (p-values, Bonferroni adjusted)")
-                md_content.append("| | Unit | Integration | E2E |")
-                md_content.append("|---|---|---|---|")
-                md_content.append(f"| **Unit** | - | {p_values.loc['unit','integration']:.4g} | {p_values.loc['unit','e2e']:.4g} |")
-                md_content.append(f"| **Integration** | {p_values.loc['integration','unit']:.4g} | - | {p_values.loc['integration','e2e']:.4g} |")
-                md_content.append(f"| **E2E** | {p_values.loc['e2e','unit']:.4g} | {p_values.loc['e2e','integration']:.4g} | - |")
+                md_content.append("| | Unit | Integration | E2E | Other |")
+                md_content.append("|---|---|---|---|---|")
+                md_content.append(f"| **Unit** | - | {p_values.loc['unit','integration']:.4g} | {p_values.loc['unit','e2e']:.4g} | {p_values.loc['unit','other']:.4g} |")
+                md_content.append(f"| **Integration** | {p_values.loc['integration','unit']:.4g} | - | {p_values.loc['integration','e2e']:.4g} | {p_values.loc['integration','other']:.4g} |")
+                md_content.append(f"| **E2E** | {p_values.loc['e2e','unit']:.4g} | {p_values.loc['e2e','integration']:.4g} | - | {p_values.loc['e2e','other']:.4g} |")
+                md_content.append(f"| **Other** | {p_values.loc['other','unit']:.4g} | {p_values.loc['other','integration']:.4g} | {p_values.loc['other','e2e']:.4g} | - |")
             except Exception as e:
                 md_content.append(f"(Could not run Dunn's precisely: {e})")
         else:
             md_content.append("Since $p \\ge 0.05$, there is no significant difference in repository sizes between the dominant test types written.\n")
     else:
-         md_content.append("Not enough data to run Kruskal-Wallis across all three categories.\n")
+         md_content.append("Not enough data to run Kruskal-Wallis across all categories.\n")
 
     # Visualization
     plt.figure(figsize=(8, 6))
-    ax = sns.boxplot(data=df, x='dominant_test_type', y='project_stars', order=['unit', 'integration', 'e2e'], palette='Set2', hue='dominant_test_type', legend=False)
+    ax = sns.boxplot(data=df, x='dominant_test_type', y='project_stars', order=['unit', 'integration', 'e2e', 'other'], palette='Set2', hue='dominant_test_type', legend=False)
     ax.set_yscale('symlog') # Handles 0 elegantly unlike strict log
     plt.title("Repository Size (Stars) by Dominant Test Type")
     plt.ylabel("Project Stars (Log Scale)")
@@ -437,6 +459,24 @@ def main():
     plt.close()
     
     md_content.append("\n![Kruskal Boxplot](figures/7_kruskal_boxplot.png)\n")
+
+    # Simple bin line plot for test distribution by size
+    bins = [-1, 10, 100, 1000, 10000, 100000, 1e9]
+    labels = ['0-10', '11-100', '101-1k', '1k-10k', '10k-100k', '100k+']
+    df['star_bins'] = pd.cut(df['project_stars'], bins=bins, labels=labels)
+    bin_counts = df.groupby(['star_bins', 'dominant_test_type'], observed=True).size().reset_index(name='count')
+    
+    plt.figure(figsize=(10, 6))
+    sns.lineplot(data=bin_counts, x='star_bins', y='count', hue='dominant_test_type', marker='o', palette='Set2')
+    plt.title("Growth of Test Types by Repository Size")
+    plt.xlabel("Repository Size (Stars Bins)")
+    plt.ylabel("Number of PRs")
+    plt.tight_layout()
+    plt.savefig('figures/7_test_growth_line.png')
+    plt.close()
+
+    md_content.append("### Simple Test Type Growth by Repository Size\n")
+    md_content.append("\n![Test Growth Line](figures/7_test_growth_line.png)\n")
 
     print("Saving markdown document...")
     with open('rq1_analysis_report.md', 'w') as f:

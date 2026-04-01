@@ -225,3 +225,73 @@ class GitHubGraphQLClient:
                 results[sha] = state
                 
         return results
+
+    def fetch_pr_files_batch(self, repo_owner: str, repo_name: str, pr_numbers: List[int]) -> Dict[int, List[str]]:
+        """Fetches the changed file paths for a batch of PRs.
+
+        Args:
+            repo_owner: The repository owner.
+            repo_name: The repository name.
+            pr_numbers: A list of PR numbers.
+
+        Returns:
+            A dictionary mapping PR numbers to their list of changed file paths.
+        """
+        results = {}
+        batch_size = 50
+        
+        for i in range(0, len(pr_numbers), batch_size):
+            batch = pr_numbers[i:i + batch_size]
+            
+            alias_blocks = []
+            for pr_num in batch:
+                block = f"""
+                pr_{pr_num}: pullRequest(number: {pr_num}) {{
+                    files(first: 100) {{
+                        nodes {{
+                            path
+                        }}
+                    }}
+                }}
+                """
+                alias_blocks.append(block)
+                
+            query = f"""
+            query {{
+                repository(owner: "{repo_owner}", name: "{repo_name}") {{
+                    {"".join(alias_blocks)}
+                }}
+                rateLimit {{
+                    cost
+                    remaining
+                    resetAt
+                }}
+            }}
+            """
+            
+            try:
+                data = self.execute_query(query)
+            except Exception as e:
+                print(f"   [GraphQL] Error fetching batch for {repo_name}: {e}")
+                continue
+            
+            rate_limit = data.get("rateLimit", {})
+            if rate_limit.get("remaining", 5000) < 50:
+                print(f"   [GraphQL] Approaching rate limit! Remaining: {rate_limit['remaining']}")
+                
+            repo_data = data.get("repository") or {}
+            
+            for pr_num in batch:
+                pr_key = f"pr_{pr_num}"
+                pr_data = repo_data.get(pr_key)
+                files_list = []
+                
+                if pr_data and pr_data.get("files") and pr_data["files"].get("nodes"):
+                    for node in pr_data["files"]["nodes"]:
+                        path = node.get("path")
+                        if path:
+                            files_list.append(path)
+                            
+                results[pr_num] = files_list
+                
+        return results

@@ -50,3 +50,4 @@ venv.bak/
 
 # MacOS
 .DS_Store
+.env
