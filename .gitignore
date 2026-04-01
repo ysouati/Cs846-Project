@@ -1,7 +1,16 @@
 # Data files
 *.json
+# Allow core datasets
 !test_run_rq1.json
 !test_run_prs.json
+!rq1_*.json
+!rq2_*.json
+!rq3_*.json
+!modular_filtered_test_prs.json
+
+# But ignore DeepSeek API caches
+deepseek_cache*.json
+rq2_deepseek_chat_cache*.json
 
 # Logs
 *.log
