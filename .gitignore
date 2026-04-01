@@ -51,3 +51,11 @@ venv.bak/
 # MacOS
 .DS_Store
 .env
+
+# One-off analytical scripts and large zips
+generate_*
+augment_ci_categories.py
+extract_confrontations.py
+sample_prs.py
+*.zip
+direct_confrontations_examples.md
